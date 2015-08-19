@@ -12,6 +12,8 @@
             var tileSource = new OpenSeadragon.DjatokaTileSource(config.djatokaServerBaseURL, uri, settings.islandoraOpenSeadragon);
             config.tileSources.push(tileSource);
           });
+
+          config.tileSources[0].tileSize = 500;
           var viewer = new OpenSeadragon(config);
           var update_clip = function(viewer) {
             var fitWithinBoundingBox = function(d, max) {
