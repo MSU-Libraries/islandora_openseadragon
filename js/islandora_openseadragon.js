@@ -1,4 +1,3 @@
-
 (function($) {
   Drupal.behaviors.islandoraOpenSeadragon = {
     attach: function(context, settings) {
@@ -14,7 +13,8 @@
             config.tileSources.push(tileSource);
           });
 
-          config.tileSources[0].tileSize = 500;
+          config.navigatorHeight = 150;
+          config.navigatorWidth = 150;
           var viewer = new OpenSeadragon(config); 
             var update_clip = function(viewer) {
             var fitWithinBoundingBox = function(d, max) {
@@ -93,4 +93,3 @@
     }
   };
 })(jQuery);
-
