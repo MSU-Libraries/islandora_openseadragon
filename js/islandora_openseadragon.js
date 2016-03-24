@@ -11,6 +11,8 @@
             var tileSource = new OpenSeadragon.DjatokaTileSource(config.djatokaServerBaseURL, uri, settings.islandoraOpenSeadragon);
             config.tileSources.push(tileSource);
           });
+          config.navigatorHeight = 150;
+          config.navigatorWidth = 150;
           var viewer = new OpenSeadragon(config);
           // Make the viewer available in the global scope.
           Drupal.settings.islandora_open_seadragon_viewer = viewer;
@@ -22,44 +24,52 @@
                 return new OpenSeadragon.Point(parseInt(d.width * max.y/d.height),max.y);
               }
             }
-            var getDisplayRegion = function(viewer, source) {
+            function resizePrint(viewer,source) {
+            // var getDisplayRegion = function(viewer, source) {
               // Determine portion of scaled image that is being displayed.
+              var viewerData = viewer.eventSource;
               var box = new OpenSeadragon.Rect(0, 0, source.x, source.y);
-              var container = viewer.viewport.getContainerSize();
-              var bounds = viewer.viewport.getBounds();
+              var container = viewerData.viewport.getContainerSize();
+              var bounds = viewerData.viewport.getBounds();
               // If image is offset to the left.
               if (bounds.x > 0){
-                box.x = box.x - viewer.viewport.pixelFromPoint(new OpenSeadragon.Point(0,0)).x;
+                box.x = box.x - viewerData.viewport.pixelFromPoint(new OpenSeadragon.Point(0,0)).x;
               }
               // If full image doesn't fit.
               if (box.x + source.x > container.x) {
-                box.width = container.x - viewer.viewport.pixelFromPoint(new OpenSeadragon.Point(0,0)).x;
+                box.width = container.x - viewerData.viewport.pixelFromPoint(new OpenSeadragon.Point(0,0)).x;
                 if (box.width > container.x) {
                   box.width = container.x;
                 }
               }
               // If image is offset up.
               if (bounds.y > 0) {
-                box.y = box.y - viewer.viewport.pixelFromPoint(new OpenSeadragon.Point(0,0)).y;
+                box.y = box.y - viewerData.viewport.pixelFromPoint(new OpenSeadragon.Point(0,0)).y;
               }
               // If full image doesn't fit.
               if (box.y + source.y > container.y) {
-                box.height = container.y - viewer.viewport.pixelFromPoint(new OpenSeadragon.Point(0,0)).y;
+                box.height = container.y - viewerData.viewport.pixelFromPoint(new OpenSeadragon.Point(0,0)).y;
                 if (box.height > container.y) {
                   box.height = container.y;
                 }
               }
               return box;
             }
-            var source = viewer.source;
-            var zoom = viewer.viewport.getZoom();
+            if (viewer.source) {
+              var source = viewer.source; 
+            }
+            else {
+              var source = viewer.eventSource.source;
+            }
+            var viewerData = viewer.eventSource;
+            var zoom = viewerData.viewport.getZoom();
             var size = new OpenSeadragon.Rect(0, 0, source.dimensions.x, source.dimensions.y);
-            var container = viewer.viewport.getContainerSize();
+            var container = viewerData.viewport.getContainerSize();
             var fit_source = fitWithinBoundingBox(size, container);
             var total_zoom = fit_source.x/source.dimensions.x;
             var container_zoom = fit_source.x/container.x;
             var level = (zoom * total_zoom) / container_zoom;
-            var box = getDisplayRegion(viewer, new OpenSeadragon.Point(parseInt(source.dimensions.x*level), parseInt(source.dimensions.y*level)));
+            var box = resizePrint(viewer, new OpenSeadragon.Point(parseInt(source.dimensions.x*level), parseInt(source.dimensions.y*level)));
             var scaled_box = new OpenSeadragon.Rect(parseInt(box.x/level), parseInt(box.y/level), parseInt(box.width/level), parseInt(box.height/level));
             var params = {
               'url_ver': 'Z39.88-2004',
@@ -76,7 +86,7 @@
             }));
           };
           viewer.addHandler("open", update_clip);
-          viewer.addHandler("animationfinish", update_clip);
+          viewer.addHandler("animation-finish", update_clip);
           if (settings.islandoraOpenSeadragon.fitToAspectRatio) {
             viewer.addHandler("open", function (viewer) {
               if (viewer.source.aspectRatio / viewer.viewport.getAspectRatio() <= 1) {
